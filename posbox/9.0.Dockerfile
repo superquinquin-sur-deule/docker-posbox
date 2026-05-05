@@ -1,15 +1,21 @@
 FROM debian:jessie AS base
-MAINTAINER Iván Todorovich <ivan.todorovich@druidoo.io>
+LABEL maintainer="Iván Todorovich <ivan.todorovich@druidoo.io>"
 
 ENV ODOO_SRC_PATH="/home/odoo/odoo-src"
 ENV ODOO_DEST="/home/odoo/odoo"
 ENV REPOSITORY_URL="https://github.com/AwesomeFoodCoops/odoo-production.git"
 ENV REPOSITORY_BRANCH="9.0"
 
+RUN echo "deb http://archive.debian.org/debian/ jessie main contrib non-free" > /etc/apt/sources.list && \
+    echo "deb http://archive.debian.org/debian-security/ jessie/updates main contrib non-free" >> /etc/apt/sources.list && \
+    echo 'Acquire::Check-Valid-Until "false";' > /etc/apt/apt.conf.d/99no-check-valid-until && \
+    echo 'Acquire::AllowInsecureRepositories "true";' >> /etc/apt/apt.conf.d/99no-check-valid-until && \
+    echo 'Acquire::AllowDowngradeToInsecureRepositories "true";' >> /etc/apt/apt.conf.d/99no-check-valid-until
+
 # Install some deps, lessc and less-plugin-clean-css, and wkhtmltopdf
 RUN set -x; \
         apt-get update \
-        && apt-get install -y --no-install-recommends \
+        && apt-get install -y --reinstall --allow-unauthenticated --no-install-recommends \
         sudo \
         adduser \
         apache2 \
@@ -66,10 +72,10 @@ RUN set -x; \
 RUN pip install --upgrade \
         pyusb==1.0b1 \
         qrcode==4.0.1 \
-        evdev \
-        pyyaml \
-        pycountry \
-        pyserial \
+        evdev==0.7.0 \
+        pyyaml==3.13 \
+        pycountry==18.5.26 \
+        pyserial==3.4 \
         git+https://github.com/Ousret/pyTeliumManager.git@python-2.7
 
 
@@ -110,12 +116,11 @@ RUN mkdir -p /var/run/odoo
 RUN touch /var/run/odoo/odoo.pid && chown odoo:odoo -R /var/run/odoo
 RUN rm -rf "$ODOO_SRC_PATH"
 
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
 WORKDIR "$ODOO_DEST"
 USER odoo
 VOLUME /var/log/odoo
 EXPOSE 8069
-
-# TODO: Fix this COPY is not working. We do it again on local Dockerfile
-ONBUILD COPY odoo.conf /home/odoo/odoo/odoo.conf
-ONBUILD CMD ["/home/odoo/odoo/odoo.py", "-c", "/home/odoo/odoo/odoo.conf"]
-ONBUILD USER root
+ENTRYPOINT ["/entrypoint.sh"]
