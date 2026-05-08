@@ -116,6 +116,9 @@ RUN mkdir -p /var/run/odoo
 RUN touch /var/run/odoo/odoo.pid && chown odoo:odoo -R /var/run/odoo
 RUN rm -rf "$ODOO_SRC_PATH"
 
+COPY posbox/9.0.healthcheck.py /healthcheck.py
+RUN chmod +x /healthcheck.py
+
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
