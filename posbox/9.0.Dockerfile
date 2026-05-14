@@ -111,6 +111,9 @@ RUN cp -r $ODOO_SRC_PATH/OCA_addons/hw_* $ODOO_DEST/addons/ || true
 RUN cp -r $ODOO_SRC_PATH/louve_addons/hw_* $ODOO_DEST/addons/ || true
 RUN cp -r $ODOO_SRC_PATH/intercoop_addons/hw_* $ODOO_DEST/addons/ || true
 
+# Disable printstatus task on startup
+RUN sed -i "/driver.push_task('printstatus')/d" $ODOO_DEST/addons/hw_escpos/controllers/main.py
+
 RUN chown -R odoo:odoo "$ODOO_DEST"
 RUN mkdir -p /var/run/odoo
 RUN touch /var/run/odoo/odoo.pid && chown odoo:odoo -R /var/run/odoo
